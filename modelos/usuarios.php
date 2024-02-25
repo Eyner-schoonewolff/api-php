@@ -1,21 +1,21 @@
 <?php
 
-require_once './modelos/usuario_modelos.php';
+require_once './database/database.php';
 require_once './vendor/autoload.php';
 
 $dotenv = Dotenv\Dotenv::createImmutable('./config');
 $dotenv->load();
 
-
-class UsuarioControlador
+class UsuarioModelo
 {
 
     private $conexion;
 
     function __construct()
     {
-        $this->conexion = new mysqli($_ENV['DB_HOST'], $_ENV['DB_USERNAME'], $_ENV['DB_PASSWORD'], $_ENV['DB_NAME'], $_ENV['DB_PORT']);
+        $this->conexion = new Database($_ENV['DB_HOST'], $_ENV['DB_USERNAME'], $_ENV['DB_PASSWORD'], $_ENV['DB_NAME'], $_ENV['DB_PORT']);
     }
+
 
 
     function obtenerUsuario()
@@ -24,15 +24,11 @@ class UsuarioControlador
             $query = "SELECT * FROM usuarios WHERE estado = 0;";
             $resultados = $this->conexion->query($query);
 
-            // Verificar si hubo un error en la consulta
-            if (!$resultados) {
-                throw new Exception("Error en la consulta: " . $this->conexion->error);
-            }
 
             // Obtener todas las filas como un array asociativo de arrays
             $usuarios = mysqli_fetch_all($resultados, MYSQLI_ASSOC);
 
-            $this->conexion->close();
+            $this->conexion->cerrar();
             // Devolver los usuarios como JSON
             return json_encode($usuarios);
         } catch (Exception $e) {
@@ -55,10 +51,10 @@ class UsuarioControlador
 
 
             if ($resultados) {
-                $id_insertado = $this->conexion->insert_id;
-                $this->conexion->close();
-                
-                http_response_code(202); 
+                $id_insertado = $this->conexion->obtner_id();
+                $this->conexion->cerrar();
+
+                http_response_code(202);
                 return json_encode(array("id" => $id_insertado, "mensaje" => "Registro exitoso"));
             } else {
                 throw new Exception("Error al registrar usuario");
@@ -74,7 +70,7 @@ class UsuarioControlador
 
             if (!$this->existeIdUsuario($id) || $id == null) {
                 // El ID no existe, retornar un JSON con un mensaje de error
-                http_response_code(404); 
+                http_response_code(404);
                 return json_encode(array("error" => "El ID de usuario no existe"));
             }
 
@@ -87,11 +83,11 @@ class UsuarioControlador
             $resultados = $this->conexion->query($query);
 
             // Cerrar la conexión
-            $this->conexion->close();
+            $this->conexion->cerrar();
 
             if ($resultados) {
                 // La actualización fue exitosa
-                http_response_code(200); 
+                http_response_code(200);
                 return json_encode(array("id" => $id, "mensaje" => "Usuario actualizado correctamente."));
             } else {
                 // Ocurrió un error durante la actualización
@@ -114,7 +110,7 @@ class UsuarioControlador
             $query = "UPDATE usuarios SET estado = '$estado' WHERE id = '$id';";
 
             $resultados = $this->conexion->query($query);
-            $this->conexion->close();
+            $this->conexion->cerrar();
 
             if ($resultados) {
 

@@ -1,22 +1,37 @@
 <?php
 
-require_once "./controladores/usuarios.php";
 
+require_once "./modelos/usuarios.php";
 
-class RouterUsuario
+use OpenApi\Annotations as OA;
+
+/**
+ * @OA\Info(title="API de Usuarios", version="1.0")
+ */
+class UsuarioController
 {
-    private $usuarioControlador;
+    private $usuarioModelo;
+
     function __construct()
     {
-        $this->usuarioControlador = new UsuarioControlador();
-
+        $this->usuarioModelo = new UsuarioModelo();
     }
 
+    /**
+     * @OA\Get(
+     *     path="/usuarios",
+     *     summary="Obtener todos los usuarios",
+     *     tags={"Usuarios"},
+     *     @OA\Response(response="200", description="Lista de usuarios"),
+     *     @OA\Response(response="404", description="No se encontraron usuarios"),
+     * )
+     */
     function obtenerUsuarios()
     {
-        $usuario = $this->usuarioControlador->obtenerUsuario();
+        $usuario = $this->usuarioModelo->obtenerUsuario();
         return $usuario;
     }
+
 
     function registrarUsuario()
     {
@@ -28,7 +43,7 @@ class RouterUsuario
         // Verificar si la decodificación fue exitosa
         if ($data === null) {
             // La decodificación falló
-            http_response_code(500); 
+            http_response_code(500);
             return json_encode(array("error" => "Error al decodificar el JSON"));
         } else {
 
@@ -39,7 +54,7 @@ class RouterUsuario
             $datosUsuario = array("nombre" => $nombre, "correo" => $correo);
 
             // Llamar al método para crear un usuario y pasarle los datos
-            $resultado = $this->usuarioControlador->crearUsuario($datosUsuario);
+            $resultado = $this->usuarioModelo->crearUsuario($datosUsuario);
 
             // Ahora puedes usar $resultado como desees
             return $resultado;
@@ -52,7 +67,7 @@ class RouterUsuario
         $id = isset($_GET['id']) ? $_GET['id'] : null;
 
         if ($id === null) {
-            http_response_code(404); 
+            http_response_code(404);
             return json_encode(array("error" => "No se proporcionó un ID"));
         }
 
@@ -60,7 +75,7 @@ class RouterUsuario
         $data = json_decode($body, true);
 
         if ($data === null) {
-            http_response_code(404); 
+            http_response_code(404);
             return json_encode(array("error" => "Error al decodificar el JSON"));
         } else {
 
@@ -69,7 +84,7 @@ class RouterUsuario
 
             $actualizarUsuario = array("nombre" => $nombre, "correo" => $correo);
 
-            $actualizacion = $this->usuarioControlador->actualizarUsuario($id, $actualizarUsuario);
+            $actualizacion = $this->usuarioModelo->actualizarUsuario($id, $actualizarUsuario);
 
             return $actualizacion;
         }
@@ -81,20 +96,20 @@ class RouterUsuario
 
         if ($id === null) {
 
-            http_response_code(404); 
+            http_response_code(404);
             return json_encode(array("error" => "No se proporcionó un ID"));
         }
-        
+
         $body = file_get_contents("php://input");
         $data = json_decode($body, true);
 
         if ($data === null) {
-            http_response_code(404); 
+            http_response_code(404);
             return json_encode(array("error" => "Error al decodificar el JSON"));
 
-        }else{
+        } else {
             $estado = $data["estado"];
-            $actualizacion = $this->usuarioControlador->actualizarEstadoUsuario($id,$estado);
+            $actualizacion = $this->usuarioModelo->actualizarEstadoUsuario($id, $estado);
             return $actualizacion;
         }
 
